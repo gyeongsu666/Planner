@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}통계{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">통계</h1>
+  <div class="form-row">
+    <input type="number" id="stat-year"  class="form-input" style="width:90px">
+    <select               id="stat-month" class="form-input" style="width:80px">
+      {% for m in range(1,13) %}<option value="{{ m }}">{{ m }}월</option>{% endfor %}
+    </select>
+    <button class="btn btn-primary" onclick="loadStats()">조회</button>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="card stat-card">
+    <h2 class="card-title">월간 완료율</h2>
+    <div class="stat-big" id="stat-rate">-</div>
+    <div class="stat-sub" id="stat-detail"></div>
+  </div>
+  <div class="card stat-card">
+    <h2 class="card-title">중요도별 분포</h2>
+    <div id="stat-importance"></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/stats.js') }}"></script>
+<script>
+  const today = new Date();
+  document.getElementById('stat-year').value  = today.getFullYear();
+  document.getElementById('stat-month').value = today.getMonth() + 1;
+  loadStats();
+</script>
+{% endblock %}

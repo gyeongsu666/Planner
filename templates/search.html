@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}검색{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">일정 검색</h1>
+</div>
+
+<div class="search-box card">
+  <div class="search-tabs">
+    <button class="tab active" onclick="switchTab('keyword', this)">키워드</button>
+    <button class="tab"        onclick="switchTab('date', this)">날짜</button>
+    <button class="tab"        onclick="switchTab('range', this)">날짜 범위</button>
+  </div>
+
+  <div id="tab-keyword" class="tab-panel">
+    <div class="form-row">
+      <input type="text" id="s-keyword" class="form-input" placeholder="제목 또는 메모 검색">
+      <button class="btn btn-primary" onclick="doSearch('keyword')">검색</button>
+    </div>
+    <p class="search-hint">제목과 메모 내용을 통합 검색합니다 (선형 탐색)</p>
+  </div>
+
+  <div id="tab-date" class="tab-panel" style="display:none">
+    <div class="form-row">
+      <input type="date" id="s-date" class="form-input">
+      <button class="btn btn-primary" onclick="doSearch('date')">검색</button>
+    </div>
+    <p class="search-hint">특정 날짜의 일정을 검색합니다 (이진 탐색)</p>
+  </div>
+
+  <div id="tab-range" class="tab-panel" style="display:none">
+    <div class="form-row">
+      <input type="date" id="s-start" class="form-input" placeholder="시작일">
+      <span class="range-sep">~</span>
+      <input type="date" id="s-end"   class="form-input" placeholder="종료일">
+      <button class="btn btn-primary" onclick="doSearch('range')">검색</button>
+    </div>
+    <p class="search-hint">날짜 범위 내 일정을 검색합니다 (이진 탐색)</p>
+  </div>
+</div>
+
+<div id="search-result-label" class="result-label" style="display:none"></div>
+<div id="schedule-list" class="schedule-grid"></div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/schedule.js') }}"></script>
+<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+{% endblock %}

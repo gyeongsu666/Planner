@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+
+# PyInstaller 빌드 산출물
+build/
+dist/
+
+# Inno Setup 설치 파일
+installer_output/
+
+# WebView2 부트스트래퍼 (build.bat이 다운로드)
+MicrosoftEdgeWebview2Setup.exe
+
+# 로컬 데이터베이스 (사용자 데이터)
+instance/
+
+# 로컬 설정
+.claude/settings.local.json
+.vscode/

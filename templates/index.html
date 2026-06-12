@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}오늘 일정{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">오늘 일정</h1>
+  <span class="today-badge" id="today-date"></span>
+  <button class="btn btn-primary" onclick="openAddModal()">+ 일정 추가</button>
+</div>
+
+<div class="top-section">
+  <div class="card top-card">
+    <h2 class="card-title">🔥 중요 일정 TOP 5</h2>
+    <ul class="top-list" id="top-list">
+      <li class="loading">불러오는 중...</li>
+    </ul>
+  </div>
+</div>
+
+<div id="schedule-list" class="schedule-grid"></div>
+
+<!-- 일정 추가/수정 모달 -->
+<div class="modal-overlay" id="modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">일정 추가</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-group">
+        <label>제목 *</label>
+        <input type="text" id="f-title" placeholder="일정 제목" class="form-input">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>날짜 *</label>
+          <input type="date" id="f-date" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>중요도 *</label>
+          <select id="f-importance" class="form-input">
+            <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+            <option value="4">⭐⭐⭐⭐ (4)</option>
+            <option value="3" selected>⭐⭐⭐ (3)</option>
+            <option value="2">⭐⭐ (2)</option>
+            <option value="1">⭐ (1)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>시작 시간 *</label>
+          <input type="time" id="f-start" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>종료 시간 *</label>
+          <input type="time" id="f-end" class="form-input">
+        </div>
+      </div>
+      <div class="form-group quick-btns">
+        <label>퀵 설정</label>
+        <div>
+          <button class="btn btn-sm" onclick="setQuick('today')">하루</button>
+          <button class="btn btn-sm" onclick="setQuick('week')">일주일</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>메모</label>
+        <textarea id="f-memo" class="form-input" rows="3" placeholder="메모를 입력하세요"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">취소</button>
+      <button class="btn btn-primary" onclick="submitSchedule()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 상태 변경 모달 -->
+<div class="modal-overlay" id="status-modal" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2>상태 변경</h2>
+      <button class="modal-close" onclick="closeStatusModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="status-target-id">
+      <div class="status-buttons">
+        <button class="btn status-btn pending"     onclick="setStatus('대기')">대기</button>
+        <button class="btn status-btn in-progress" onclick="setStatus('진행중')">진행중</button>
+        <button class="btn status-btn completed"   onclick="setStatus('완료')">완료</button>
+        <button class="btn status-btn cancelled"   onclick="setStatus('취소')">취소</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/schedule.js') }}"></script>
+<script>
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  loadToday();
+  loadTop();
+</script>
+{% endblock %}

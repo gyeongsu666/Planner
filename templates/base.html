@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>플래너</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="layout">
+
+  <!-- 사이드바 -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text"><span>📅</span> 플래너</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard',this)">
+        <span class="nav-icon">🏠</span> 대시보드
+      </a>
+      <a class="nav-item" data-page="schedules" onclick="showPage('schedules',this)">
+        <span class="nav-icon">📋</span> 전체 일정
+      </a>
+      <a class="nav-item" data-page="search" onclick="showPage('search',this)">
+        <span class="nav-icon">🔍</span> 검색
+      </a>
+      <a class="nav-item" data-page="completed" onclick="showPage('completed',this)">
+        <span class="nav-icon">✅</span> 완료 목록
+      </a>
+      <a class="nav-item" data-page="statistics" onclick="showPage('statistics',this)">
+        <span class="nav-icon">📊</span> 통계
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="widget-btn" onclick="launchWidget()">🗂 미니 모드</button>
+      <div class="today-chip" id="sidebar-date"></div>
+    </div>
+  </aside>
+
+  <!-- 메인 -->
+  <main class="main">
+
+    <!-- 대시보드 페이지 -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">대시보드</div>
+          <div class="page-sub" id="dash-date-sub"></div>
+        </div>
+        <button class="btn btn-primary" onclick="openAddModal()">＋ 일정 추가</button>
+      </div>
+
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card blue clickable" onclick="openStatPanel('today')">
+          <div class="stat-icon">📅</div>
+          <div class="stat-label">오늘 일정</div>
+          <div class="stat-value" id="s-today">-</div>
+          <div class="stat-sub" id="s-today-sub">불러오는 중</div>
+        </div>
+        <div class="stat-card green clickable" onclick="openStatPanel('week')">
+          <div class="stat-icon">📈</div>
+          <div class="stat-label">주간 완료율</div>
+          <div class="stat-value" id="s-week">-</div>
+          <div class="stat-sub" id="s-week-sub"></div>
+        </div>
+        <div class="stat-card amber clickable" onclick="openStatPanel('pending')">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-label">대기 중</div>
+          <div class="stat-value" id="s-pending">-</div>
+          <div class="stat-sub">미완료 일정</div>
+        </div>
+        <div class="stat-card red clickable" onclick="openStatPanel('done')">
+          <div class="stat-icon">📦</div>
+          <div class="stat-label">전체 완료</div>
+          <div class="stat-value" id="s-done">-</div>
+          <div class="stat-sub" id="s-done-sub"></div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-col-left">
+          <div class="card">
+            <div class="card-title">오늘 일정</div>
+            <div class="schedule-list" id="today-list"></div>
+          </div>
+        </div>
+        <div class="dash-col-right">
+          <div class="card card-sm">
+            <div class="card-title">🔥 중요 일정 TOP 5</div>
+            <div class="top-list" id="top-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 전체 일정 페이지 -->
+    <div class="page" id="page-schedules">
+      <div class="page-header">
+        <div class="page-title">전체 일정</div>
+        <div class="sort-bar">
+          <span class="sort-label">정렬</span>
+          <button class="btn btn-sm active" onclick="loadAll('date',this)">날짜순</button>
+          <button class="btn btn-sm"        onclick="loadAll('importance',this)">중요도순</button>
+          <button class="btn btn-sm"        onclick="loadAll('combined',this)">복합</button>
+        </div>
+        <!-- 뷰 전환 버튼 -->
+        <div class="view-toggle">
+          <button class="btn btn-sm active" id="view-btn-list" onclick="setScheduleView('list')">☰ 목록</button>
+          <button class="btn btn-sm"        id="view-btn-cal"  onclick="setScheduleView('cal')">🗓 달력</button>
+        </div>
+        <button class="btn btn-primary" onclick="openAddModal()">＋ 일정 추가</button>
+      </div>
+      <div class="schedule-list" id="all-list"></div>
+      <div id="cal-wrap" style="display:none"></div>
+      <div id="cal-day-panel" style="display:none" class="cal-day-panel"></div>
+    </div>
+
+    <!-- 검색 페이지 -->
+    <div class="page" id="page-search">
+      <div class="page-header">
+        <div class="page-title">일정 검색</div>
+      </div>
+      <div class="search-wrap">
+        <div class="search-tabs">
+          <button class="tab active" onclick="switchTab('keyword',this)">키워드</button>
+          <button class="tab"        onclick="switchTab('date',this)">날짜</button>
+          <button class="tab"        onclick="switchTab('range',this)">날짜 범위</button>
+        </div>
+        <div class="tab-panel show" id="tab-keyword">
+          <div class="form-row" style="gap:10px">
+            <input type="text" id="s-keyword" class="form-input" placeholder="제목 또는 메모 내용 검색">
+            <button class="btn btn-primary" onclick="doSearch('keyword')">검색</button>
+          </div>
+          <div class="search-hint">제목과 메모를 통합 검색합니다 (선형 탐색 O(n))</div>
+        </div>
+        <div class="tab-panel" id="tab-date">
+          <div class="form-row" style="gap:10px">
+            <input type="date" id="s-date" class="form-input">
+            <button class="btn btn-primary" onclick="doSearch('date')">검색</button>
+          </div>
+          <div class="search-hint">특정 날짜를 포함하는 일정을 검색합니다 (이진 탐색 O(log n))</div>
+        </div>
+        <div class="tab-panel" id="tab-range">
+          <div class="form-row" style="gap:10px;align-items:center">
+            <input type="date" id="s-start" class="form-input">
+            <span class="range-sep">~</span>
+            <input type="date" id="s-end" class="form-input">
+            <button class="btn btn-primary" onclick="doSearch('range')">검색</button>
+          </div>
+          <div class="search-hint">날짜 범위와 겹치는 일정을 검색합니다 (이진 탐색 O(log n))</div>
+        </div>
+      </div>
+      <div id="search-result-label" class="result-label" style="display:none"></div>
+      <div class="schedule-list" id="search-list"></div>
+    </div>
+
+    <!-- 완료 목록 페이지 -->
+    <div class="page" id="page-completed">
+      <div class="page-header">
+        <div class="page-title">완료 목록</div>
+      </div>
+      <div class="schedule-list" id="completed-list"></div>
+    </div>
+
+    <!-- 통계 페이지 -->
+    <div class="page" id="page-statistics">
+      <div class="page-header">
+        <div class="page-title">통계</div>
+        <div class="form-row" style="gap:8px">
+          <input type="number" id="stat-year"  class="form-input" style="width:88px">
+          <select               id="stat-month" class="form-input" style="width:76px">
+            {% for m in range(1,13) %}<option value="{{ m }}">{{ m }}월</option>{% endfor %}
+          </select>
+          <button class="btn btn-primary" onclick="loadStats()">조회</button>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="card">
+          <div class="card-title">월간 완료율</div>
+          <div class="big-rate" id="stat-rate">-</div>
+          <div class="rate-sub"  id="stat-rate-sub"></div>
+          <div class="rate-bar-wrap"><div class="rate-bar" id="stat-rate-bar" style="width:0%"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">중요도별 분포</div>
+          <div id="stat-importance"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- 토스트 -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- 일정 추가/수정 모달 -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="onOverlayClick(event,'modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">일정 추가</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-group">
+        <label>제목 *</label>
+        <input type="text" id="f-title" class="form-input" placeholder="일정 제목을 입력하세요">
+      </div>
+      <!-- 날짜 유형 토글 -->
+      <div class="form-group">
+        <label>날짜 유형</label>
+        <div class="dt-toggle">
+          <button type="button" id="dt-range"    class="dt-btn active" onclick="setDateType('range')">📅 기간 일정</button>
+          <button type="button" id="dt-deadline" class="dt-btn"        onclick="setDateType('deadline')">📌 마감일</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" id="fg-start-date">
+          <label>시작 날짜 *</label>
+          <input type="date" id="f-start-date" class="form-input">
+        </div>
+        <div class="form-group">
+          <label id="lbl-end-date">종료 날짜 *</label>
+          <input type="date" id="f-end-date" class="form-input">
+        </div>
+      </div>
+      <!-- 시간 선택: 오전/오후 방식 -->
+      <div class="form-row">
+        <div class="form-group" id="fg-start-time">
+          <label>시작 시간 *</label>
+          <div class="time-picker">
+            <select id="f-start-ampm" class="form-input time-ampm">
+              <option value="AM">오전</option>
+              <option value="PM">오후</option>
+            </select>
+            <select id="f-start-hour" class="form-input time-hm">
+              {% for h in range(1,13) %}<option value="{{ h }}">{{ h }}시</option>{% endfor %}
+            </select>
+            <select id="f-start-min" class="form-input time-hm">
+              {% for m in ['00','05','10','15','20','25','30','35','40','45','50','55','59'] %}
+              <option value="{{ m }}">{{ m }}분</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label id="lbl-end-time">종료 시간 *</label>
+          <div class="time-picker">
+            <select id="f-end-ampm" class="form-input time-ampm">
+              <option value="AM">오전</option>
+              <option value="PM">오후</option>
+            </select>
+            <select id="f-end-hour" class="form-input time-hm">
+              {% for h in range(1,13) %}<option value="{{ h }}">{{ h }}시</option>{% endfor %}
+            </select>
+            <select id="f-end-min" class="form-input time-hm">
+              {% for m in ['00','05','10','15','20','25','30','35','40','45','50','55','59'] %}
+              <option value="{{ m }}">{{ m }}분</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>중요도 *</label>
+          <select id="f-importance" class="form-input">
+            <option value="5">★★★★★  최고 (5)</option>
+            <option value="4">★★★★☆  높음 (4)</option>
+            <option value="3" selected>★★★☆☆  보통 (3)</option>
+            <option value="2">★★☆☆☆  낮음 (2)</option>
+            <option value="1">★☆☆☆☆  최저 (1)</option>
+          </select>
+        </div>
+        <div class="form-group" id="fg-quick" style="justify-content:flex-end">
+          <label>퀵 설정</label>
+          <div class="quick-row">
+            <button class="quick-btn" type="button" onclick="setQuick('today')">하루</button>
+            <button class="quick-btn" type="button" onclick="setQuick('week')">일주일</button>
+            <button class="quick-btn" type="button" onclick="setQuick('month')">한 달</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>메모</label>
+        <textarea id="f-memo" class="form-input" rows="3" placeholder="메모를 입력하세요 (선택)"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">취소</button>
+      <button class="btn btn-primary" onclick="submitSchedule()">저장</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 스탯 카드 패널 -->
+<div class="modal-overlay" id="stat-panel" style="display:none" onclick="onOverlayClick(event,'stat-panel')">
+  <div class="modal modal-stat">
+    <div class="modal-header">
+      <h2 id="stat-panel-title">일정</h2>
+      <button class="modal-close" onclick="closeStatPanel()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:12px 24px 0">
+      <div id="stat-panel-list" class="sp-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeStatPanel()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 상태 변경 모달 -->
+<div class="modal-overlay" id="status-modal" style="display:none" onclick="onOverlayClick(event,'status-modal')">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2>상태 변경</h2>
+      <button class="modal-close" onclick="closeStatusModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="status-target-id">
+      <div class="status-grid">
+        <button class="status-btn pending"     onclick="setStatus('대기')">⏳ 대기</button>
+        <button class="status-btn in-progress" onclick="setStatus('진행중')">▶ 진행중</button>
+        <button class="status-btn completed"   onclick="setStatus('완료')">✅ 완료</button>
+        <button class="status-btn cancelled"   onclick="setStatus('취소')">✕ 취소</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
